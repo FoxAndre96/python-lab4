@@ -73,21 +73,32 @@ def new_task(update, args):
 
 
 def remove_task(update, args):
+    task = ' '.join(args)
+    sql = 'DELETE FROM to_do_list WHERE todo="%s"'
+    cursor = conn.cursor()
     try:
-        task = ' '.join(args)
-        sql = 'DELETE FROM to_do_list WHERE todo="%s"'
-        cursor = conn.cursor()
         cursor.execute(sql, task)
+        conn.commit()
         update.message.reply_text("The task was successfully deleted.")
-    except ValueError:
+    except Exception as e:
+        print(str(e))
+        conn.rollback()
         update.message.reply_text("The task you specified is not in the list.")
+    conn.close()
 
 
 def remove_all(args):
     task = ' '.join(args)
-    sql = 'DELETE FROM to_do_list WHERE todo LIKE "%%s%"'
+    task = "%" + task + "%"
+    sql = 'DELETE FROM to_do_list WHERE todo LIKE "%s"'
     cursor = conn.cursor()
-    cursor.execute(sql, task)
+    try:
+        cursor.execute(sql, task)
+        conn.commit()
+    except Exception as e:
+        print(str(e))
+        conn.rollback()
+    conn.close()
 
 
 if __name__ == "__main__":
