@@ -13,7 +13,7 @@ def print_options(list_task):
 def print_tasks(list_task):
     string = ''
     for item in list_task:
-        string += str(item[0]) + ' ' + str(item[1]) + '\n'
+        string += str(item[1]) + '\n'
     return string
 
 
@@ -46,25 +46,37 @@ def error_text(bot, update):
 
 def show_tasks(update):
     sql = 'SELECT todo FROM to_do_list'
+    cursor = conn.cursor()
     cursor.execute(sql)
     tasks = cursor.fetchall()
     if len(tasks) == 0:
         update.message.reply_text("Nothing to do, here!")
+        conn.close()
     else:
         update.message.reply_text(print_tasks(tasks))
+        conn.close()
 
 
 def new_task(update, args):
     sql = 'INSERT INTO to_do_list VALUES (%s,%s)'
     task = ' '.join(args)
-    cursor.execute(sql, ('', task))
-    update.message.reply_text("Task successfully added.")
+    cursor = conn.cursor()
+    try:
+        cursor.execute(sql, ('', task))
+        conn.commit()
+        update.message.reply_text("Task successfully added.")
+    except Exception as e:
+        print(str(e))
+        conn.rollback()
+        update.message.reply_text("Error in adding the task.")
+    conn.close()
 
 
 def remove_task(update, args):
     try:
         task = ' '.join(args)
         sql = 'DELETE FROM to_do_list WHERE todo="%s"'
+        cursor = conn.cursor()
         cursor.execute(sql, task)
         update.message.reply_text("The task was successfully deleted.")
     except ValueError:
@@ -74,10 +86,12 @@ def remove_task(update, args):
 def remove_all(args):
     task = ' '.join(args)
     sql = 'DELETE FROM to_do_list WHERE todo LIKE "%%s%"'
+    cursor = conn.cursor()
     cursor.execute(sql, task)
 
 
-def main():
+if __name__ == "__main__":
+    conn = pymysql.connect(user='root', password='', host='localhost', database='tasks')
 
     updater = Updater('Code API')
 
@@ -97,10 +111,3 @@ def main():
     updater.start_polling()
 
     updater.idle()
-
-
-if __name__ == "__main__":
-    conn = pymysql.connect(user='root', password='', host='localhost', database='tasks')
-    cursor = conn.cursor()
-
-    main()
