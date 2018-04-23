@@ -51,10 +51,8 @@ def show_tasks(update):
     tasks = cursor.fetchall()
     if len(tasks) == 0:
         update.message.reply_text("Nothing to do, here!")
-        conn.close()
     else:
         update.message.reply_text(print_tasks(tasks))
-        conn.close()
 
 
 def new_task(update, args):
@@ -69,12 +67,11 @@ def new_task(update, args):
         print(str(e))
         conn.rollback()
         update.message.reply_text("Error in adding the task.")
-    conn.close()
 
 
 def remove_task(update, args):
     task = ' '.join(args)
-    sql = 'DELETE FROM to_do_list WHERE todo="%s"'
+    sql = 'DELETE FROM to_do_list WHERE todo=%s'
     cursor = conn.cursor()
     try:
         cursor.execute(sql, task)
@@ -84,13 +81,12 @@ def remove_task(update, args):
         print(str(e))
         conn.rollback()
         update.message.reply_text("The task you specified is not in the list.")
-    conn.close()
 
 
 def remove_all(args):
     task = ' '.join(args)
     task = "%" + task + "%"
-    sql = 'DELETE FROM to_do_list WHERE todo LIKE "%s"'
+    sql = 'DELETE FROM to_do_list WHERE todo LIKE %s'
     cursor = conn.cursor()
     try:
         cursor.execute(sql, task)
@@ -98,7 +94,6 @@ def remove_all(args):
     except Exception as e:
         print(str(e))
         conn.rollback()
-    conn.close()
 
 
 if __name__ == "__main__":
@@ -122,3 +117,4 @@ if __name__ == "__main__":
     updater.start_polling()
 
     updater.idle()
+    conn.close()
